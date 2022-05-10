@@ -25,7 +25,12 @@ module LogStash
       # @return scheduler instance
       def new_scheduler(opts)
         unless opts.key?(:thread_name)
-          raise ArgumentError, 'thread_name: option is required to be able to distinguish multiple scheduler threads'
+          unless self.class.name
+            raise ArgumentError, "can not generate a thread_name for anonymous class: #{inspect}"
+          end
+          plugin_name = self.class.name.split('::').last # e.g. "jdbc"
+          opts[:thread_name] = "[#{id}]|#{self.class.plugin_type}|#{plugin_name}|scheduler"
+          # thread naming convention: [psql1]|input|jdbc|scheduler
         end
         opts[:max_work_threads] ||= 1
         # amount the scheduler thread sleeps between checking whether jobs
