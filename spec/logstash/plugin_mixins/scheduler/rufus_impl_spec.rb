@@ -18,6 +18,26 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     expect( scheduler.thread.name ).to include thread_name
   end
 
+  it "gets interrupted from join" do
+    scheduler.schedule_every('1s') { 42**1000 }
+    join_thread = Thread.start { scheduler.join }
+    sleep 1.1
+    expect(join_thread).to be_alive
+    scheduler.shutdown
+    Thread.pass
+    expect(join_thread).to_not be_alive
+  end
+
+  it "gets interrupted from join (wait shutdown)" do
+    scheduler.schedule_cron('* * * * * *') { 42**1000 }
+    join_thread = Thread.start { scheduler.join }
+    sleep 1.1
+    expect(join_thread).to be_alive
+    scheduler.shutdown(:wait)
+    Thread.pass
+    expect(join_thread).to_not be_alive
+  end
+
   context 'cron schedule' do
 
     before do

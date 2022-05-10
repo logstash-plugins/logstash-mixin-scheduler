@@ -13,6 +13,23 @@ module LogStash module PluginMixins module Scheduler
                    (defined?(Rufus::Scheduler::ZoTime) ? Rufus::Scheduler::ZoTime : ::Time)
 
     # @overload
+    def join
+      fail NotRunningError.new('cannot join scheduler that is not running') unless @thread
+      fail ThreadError.new('scheduler thread cannot join itself') if @thread == Thread.current
+      @thread.join # makes scheduler.join behavior consistent across 3.x versions
+    end
+
+    # @overload
+    def shutdown(opt=nil)
+      if @thread # do not fail when scheduler thread failed to start
+        super(opt)
+      else
+        @started_at = nil # bare minimum to look like the scheduler is down
+        # when the scheduler thread fails `@started_at = ...` might still be set
+      end
+    end
+
+    # @overload
     def timeout_jobs
       # Rufus relies on `Thread.list` which is a blocking operation and with many schedulers
       # (and threads) within LS will have a negative impact on performance as scheduler
