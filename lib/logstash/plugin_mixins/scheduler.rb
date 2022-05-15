@@ -12,23 +12,23 @@ module LogStash
       # @param cron [String] cron-line
       # @param opts [Hash] scheduler options
       # @return scheduler instance
-      def start_cron_scheduler!(cron, opts = {}, &block)
+      def start_cron_scheduler!(cron, opts = {}, &task)
         unless block_given?
-          raise ArgumentError, 'missing block - worker task to execute'
+          raise ArgumentError, 'missing task - worker task to execute'
         end
         scheduler = new_scheduler(opts)
-        scheduler.schedule_cron(cron, &block)
+        scheduler.schedule_cron(cron, &task)
         scheduler
       end
 
       %w(every at in interval).each do |type|
         class_eval <<-EVAL, __FILE__, __LINE__ + 1
-          def start_#{type}_scheduler!(arg, opts = {}, &block)
+          def start_#{type}_scheduler!(arg, opts = {}, &task)
             unless block_given?
-              raise ArgumentError, 'missing block - worker task to execute'
+              raise ArgumentError, 'missing task - worker task to execute'
             end
             scheduler = new_scheduler(opts)
-            scheduler.schedule_#{type}(arg, &block)
+            scheduler.schedule_#{type}(arg, &task)
             scheduler
           end
         EVAL
