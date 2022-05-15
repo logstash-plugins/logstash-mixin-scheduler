@@ -41,8 +41,9 @@ module LogStash
           unless self.class.name
             raise ArgumentError, "can not generate a thread_name for anonymous class: #{inspect}"
           end
+          pipeline_id = (respond_to?(:execution_context) && execution_context&.pipeline_id) || 'main'
           plugin_name = self.class.name.split('::').last # e.g. "jdbc"
-          opts[:thread_name] = "[#{id}]|#{self.class.plugin_type}|#{plugin_name}|scheduler"
+          opts[:thread_name] = "[#{pipeline_id}]|#{self.class.plugin_type}|#{plugin_name}|scheduler"
           # thread naming convention: [psql1]|input|jdbc|scheduler
         end
         opts[:max_work_threads] ||= 1
