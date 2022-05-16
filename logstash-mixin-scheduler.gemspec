@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
 
   s.platform = 'java'
 
-  s.add_runtime_dependency 'logstash-core', '>= 6.8'
+  s.add_runtime_dependency 'logstash-core', '>= 7.16'
 
   s.add_runtime_dependency 'rufus-scheduler', '>= 3.0.9'
 
