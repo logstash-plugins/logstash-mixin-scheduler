@@ -42,11 +42,11 @@ module LogStash
       lazy_init_attr(:scheduler, variable: :@_scheduler) { start_scheduler({}) }
 
       def release_scheduler
-        @_scheduler.stop if @_scheduler
+        @_scheduler.shutdown if @_scheduler
       end
 
       def release_scheduler!
-        @_scheduler.stop! if @_scheduler
+        @_scheduler.shutdown! if @_scheduler
       end
 
       # @param opts [Hash] scheduler options
@@ -73,16 +73,16 @@ module LogStash
 
         # @return a job object which responds to a #job_id method
         # @abstract
-        def cron(schedule, &task);     fail NotImplementedError; end
+        def cron(schedule, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
-        def every(period, &task);      fail NotImplementedError; end
+        def every(period, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
-        def at(timestamp, &task);      fail NotImplementedError; end
+        def at(timestamp, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
-        def in(delay, &task);          fail NotImplementedError; end
+        def in(delay, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
         def interval(interval, &task); fail NotImplementedError; end
@@ -117,7 +117,7 @@ module LogStash
         #
         # This operation does not block until the scheduler stops.
         # @abstract
-        def stop; @scheduler_impl.shutdown end
+        def shutdown; fail NotImplementedError end
 
         # Shutdown the scheduler:
         #  - prevents additional jobs from being registered,
@@ -125,7 +125,10 @@ module LogStash
         #
         # This operation does WAIT until the scheduler stops.
         # @abstract
-        def stop!; @scheduler_impl.shutdown(:wait) end
+        def shutdown!; fail NotImplementedError end
+
+        # @abstract
+        def shutdown?; fail NotImplementedError end
 
       end
 

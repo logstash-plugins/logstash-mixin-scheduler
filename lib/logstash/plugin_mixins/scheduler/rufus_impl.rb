@@ -39,9 +39,11 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
     def interval(interval, &task); __schedule(:interval, interval, &task); end
 
     # @overload
-    def stop; @impl.shutdown end
+    def shutdown; @impl.shutdown end
     # @overload
-    def stop!; @impl.shutdown(:wait) end
+    def shutdown!; @impl.shutdown(:wait) end
+    # @overload
+    def shutdown?; @impl.down? end
 
     # @overload
     def join; @impl.join end

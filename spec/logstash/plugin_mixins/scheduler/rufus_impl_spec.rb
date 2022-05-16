@@ -14,7 +14,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     LogStash::PluginMixins::Scheduler::RufusImpl::SchedulerAdapter.new(name, opts)
   end
 
-  after { scheduler.stop! }
+  after { scheduler.impl.shutdown }
 
   it "sets scheduler thread name" do
     expect( scheduler.impl.thread.name ).to include name
@@ -25,18 +25,21 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     join_thread = Thread.start { scheduler.join }
     sleep 1.1
     expect(join_thread).to be_alive
-    scheduler.stop
+    expect(scheduler.shutdown?).to be false
+    scheduler.shutdown
     Thread.pass
+    expect(scheduler.shutdown?).to be true
     expect(join_thread).to_not be_alive
   end
 
   it "gets interrupted from join (wait shutdown)" do
     scheduler.cron('* * * * * *') { 42**1000 }
+    expect(scheduler.shutdown?).to be false
     join_thread = Thread.start { scheduler.join }
     sleep 1.1
     expect(join_thread).to be_alive
-    scheduler.stop!
-    Thread.pass
+    scheduler.shutdown!
+    expect(scheduler.shutdown?).to be true
     expect(join_thread).to_not be_alive
   end
 
