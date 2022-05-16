@@ -89,7 +89,7 @@ module LogStash
 
         # Remove a previously scheduled job, this is optional
         # and only relevant for a shared scheduler.
-        def delete_job(job); fail NotImplementedError; end
+        # def delete_job(job); fail NotImplementedError; end
 
         # Blocks until _all_ jobs are joined, including jobs
         # that are scheduled after this join has begun blocking.
@@ -102,14 +102,14 @@ module LogStash
         # @return [true] if paused
         # @return [false] not paused - scheduler operating normally
         # @return [nil] if pausing is not supported
-        def paused?; nil end
+        # def paused?; nil end
 
         # Pause executing scheduled jobs.
         # @see #paused?
-        def pause; fail NotImplementedError end
+        # def pause; fail NotImplementedError end
 
         # Resume executing jobs.
-        def resume; end
+        # def resume; end
 
         # Shutdown the scheduler:
         #  - prevents additional jobs from being registered,
@@ -130,11 +130,11 @@ module LogStash
       end
 
       # Interface provided by a scheduled job.
-      # module JobInterface
-      #
-      #   def job_id; fail NotImplementedError end
-      #
-      # end
+      module JobInterface
+
+        def job_id; fail NotImplementedError end
+
+      end
 
     end
   end

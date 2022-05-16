@@ -29,14 +29,21 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
 
     # @overload
     def cron(schedule, &task); __schedule(:cron, schedule, &task); end
+    # @overload
     def every(period, &task); __schedule(:every, period, &task); end
+    # @overload
     def at(timestamp, &task); __schedule(:at, timestamp, &task); end
+    # @overload
     def in(delay, &task); __schedule(:in, delay, &task); end
+    # @overload
     def interval(interval, &task); __schedule(:interval, interval, &task); end
 
+    # @overload
     def stop; @impl.shutdown end
+    # @overload
     def stop!; @impl.shutdown(:wait) end
 
+    # @overload
     def join; @impl.join end
 
     def paused?; @impl.paused? end
@@ -49,11 +56,12 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
       unless block_given?
         raise ArgumentError, 'missing task - worker task to execute'
       end
-      @impl.send :"schedule_#{type}", arg, &task
+      JobAdapter.new @impl.send(:"schedule_#{type}", arg, &task)
     end
 
   end
 
+  # @private
   class SchedulerImpl < ::Rufus::Scheduler
 
     # Rufus::Scheduler >= 3.4 moved the Time impl into a gem EoTime = ::EtOrbi::EoTime`
@@ -215,6 +223,23 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
       end
 
     end
+    private_constant :JobDecorator
 
   end
+
+  # @private
+  class JobAdapter
+    include JobInterface
+
+    # @private
+    attr_reader :impl
+
+    def initialize(job)
+      @impl = job
+    end
+
+    # @overload
+    def job_id; @impl.job_id end
+  end
+
 end end end end
