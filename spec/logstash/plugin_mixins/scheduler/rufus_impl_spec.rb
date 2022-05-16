@@ -10,7 +10,9 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     { :max_work_threads => 2 }
   end
 
-  subject(:scheduler) { LogStash::PluginMixins::Scheduler::RufusImpl::SchedulerAdapter.new(name, opts) }
+  subject(:scheduler) do
+    LogStash::PluginMixins::Scheduler::RufusImpl::SchedulerAdapter.new(name, opts)
+  end
 
   after { scheduler.stop! }
 
