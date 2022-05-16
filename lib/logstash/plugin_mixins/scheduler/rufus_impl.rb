@@ -2,15 +2,69 @@ require 'rufus/scheduler'
 
 require 'logstash/util/loggable'
 
-module LogStash module PluginMixins module Scheduler
-  class RufusImpl < Rufus::Scheduler
+module LogStash module PluginMixins module Scheduler module RufusImpl
+  # @private
+  class SchedulerAdapter
+    include SchedulerInterface
 
     include LogStash::Util::Loggable
 
+    # @private
+    attr_reader :impl
+
+    def initialize(name, opts)
+      if name && !opts.key?(:thread_name)
+        opts[:thread_name] = name
+      end
+      opts[:max_work_threads] ||= 1
+      # amount the scheduler thread sleeps between checking whether jobs
+      # should trigger, default is 0.3 which is a bit too often ...
+      # in theory the cron expression '* * * * * *' supports running jobs
+      # every second but this is very rare, we could potentially go higher
+      opts[:frequency] ||= 1.0
+
+      logger = opts.delete(:logger) || self.logger
+      @impl = SchedulerImpl.new(opts, logger)
+    end
+
+    # @overload
+    def cron(schedule, &task); __schedule(:cron, schedule, &task); end
+    def every(period, &task); __schedule(:every, period, &task); end
+    def at(timestamp, &task); __schedule(:at, timestamp, &task); end
+    def in(delay, &task); __schedule(:in, delay, &task); end
+    def interval(interval, &task); __schedule(:interval, interval, &task); end
+
+    def stop; @impl.shutdown end
+    def stop!; @impl.shutdown(:wait) end
+
+    def join; @impl.join end
+
+    def paused?; @impl.paused? end
+    def pause; @impl.pause end
+    def resume; @impl.resume(discard_past: true) end
+
+    private
+
+    def __schedule(type, arg, &task)
+      unless block_given?
+        raise ArgumentError, 'missing task - worker task to execute'
+      end
+      @impl.send :"schedule_#{type}", arg, &task
+    end
+
+  end
+
+  class SchedulerImpl < ::Rufus::Scheduler
+
     # Rufus::Scheduler >= 3.4 moved the Time impl into a gem EoTime = ::EtOrbi::EoTime`
     # Rufus::Scheduler 3.1 - 3.3 using it's own Time impl `Rufus::Scheduler::ZoTime`
-    TimeImpl = defined?(Rufus::Scheduler::EoTime) ? Rufus::Scheduler::EoTime :
-                   (defined?(Rufus::Scheduler::ZoTime) ? Rufus::Scheduler::ZoTime : ::Time)
+    TimeImpl = defined?(::Rufus::Scheduler::EoTime) ? ::Rufus::Scheduler::EoTime :
+                   (defined?(::Rufus::Scheduler::ZoTime) ? ::Rufus::Scheduler::ZoTime : ::Time)
+
+    def initialize(opts, logger)
+      super(opts)
+      @_logger = logger
+    end
 
     # @overload
     def join
@@ -99,6 +153,9 @@ module LogStash module PluginMixins module Scheduler
       ( @opts[:thread_name] || "#{@thread_key}_scheduler" ) + '_worker-'
     end
 
+    def logger; @_logger end
+    private :logger
+
     protected
 
     # @overload
@@ -151,7 +208,6 @@ module LogStash module PluginMixins module Scheduler
           unless thread[:name]
             thread[:name] = "#{work_thread_name_prefix}#{sprintf('%02i', i)}"
             thread.name = thread[:name] if thread.respond_to?(:name=)
-            # e.g. "[oracle]<jdbc_scheduler_worker-00"
           end
         end
 
@@ -161,4 +217,4 @@ module LogStash module PluginMixins module Scheduler
     end
 
   end
-end end end
+end end end end

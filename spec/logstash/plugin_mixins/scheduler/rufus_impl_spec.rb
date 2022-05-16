@@ -4,36 +4,36 @@ require "logstash/plugin_mixins/scheduler"
 
 describe LogStash::PluginMixins::Scheduler::RufusImpl do
 
-  let(:thread_name) { '[test]<jdbc_scheduler' }
+  let(:name) { '[test]<jdbc_scheduler' }
 
   let(:opts) do
-    { :max_work_threads => 2, :thread_name => thread_name }
+    { :max_work_threads => 2 }
   end
 
-  subject(:scheduler) { described_class.new(opts) }
+  subject(:scheduler) { LogStash::PluginMixins::Scheduler::RufusImpl::SchedulerAdapter.new(name, opts) }
 
-  after { scheduler.stop(:wait) }
+  after { scheduler.stop! }
 
   it "sets scheduler thread name" do
-    expect( scheduler.thread.name ).to include thread_name
+    expect( scheduler.impl.thread.name ).to include name
   end
 
   it "gets interrupted from join" do
-    scheduler.schedule_every('1s') { 42**1000 }
+    scheduler.every('1s') { 42**1000 }
     join_thread = Thread.start { scheduler.join }
     sleep 1.1
     expect(join_thread).to be_alive
-    scheduler.shutdown
+    scheduler.stop
     Thread.pass
     expect(join_thread).to_not be_alive
   end
 
   it "gets interrupted from join (wait shutdown)" do
-    scheduler.schedule_cron('* * * * * *') { 42**1000 }
+    scheduler.cron('* * * * * *') { 42**1000 }
     join_thread = Thread.start { scheduler.join }
     sleep 1.1
     expect(join_thread).to be_alive
-    scheduler.shutdown(:wait)
+    scheduler.stop!
     Thread.pass
     expect(join_thread).to_not be_alive
   end
@@ -41,17 +41,17 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
   context 'cron schedule' do
 
     before do
-      scheduler.schedule_cron('* * * * * *') { sleep 1.25 } # every second
+      scheduler.cron('* * * * * *') { sleep 1.25 } # every second
     end
 
     it "sets worker thread names" do
       sleep 3.0
-      threads = scheduler.work_threads
+      threads = scheduler.impl.work_threads
       threads.sort! { |t1, t2| (t1.name || '') <=> (t2.name || '') }
 
       expect( threads.size ).to eql 2
-      expect( threads.first.name ).to eql "#{thread_name}_worker-00"
-      expect( threads.last.name ).to eql "#{thread_name}_worker-01"
+      expect( threads.first.name ).to eql "#{name}_worker-00"
+      expect( threads.last.name ).to eql "#{name}_worker-01"
     end
 
   end
@@ -59,12 +59,12 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
   context 'every 1s' do
 
     before do
-      scheduler.schedule_in('1s') { raise 'TEST' } # every second
+      scheduler.in('1s') { raise 'TEST' } # every second
     end
 
     it "logs errors handled" do
-      expect( scheduler.logger ).to receive(:error).with /Scheduler intercepted an error/, hash_including(:message => 'TEST')
-      sleep 1.5
+      expect( scheduler.impl.send(:logger) ).to receive(:error).with /Scheduler intercepted an error/, hash_including(:message => 'TEST')
+      sleep 2.25
     end
 
   end
@@ -76,21 +76,21 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     let(:counter) { java.util.concurrent.atomic.AtomicLong.new(0) }
 
     before do
-      scheduler.schedule_cron('* * * * * *') { counter.increment_and_get; sleep 3.25 } # every second
+      scheduler.cron('* * * * * *') { counter.increment_and_get; sleep 3.25 } # every second
     end
 
     it "are working" do
       sleep(0.05) while counter.get == 0
-      expect( scheduler.work_threads.size ).to eql 1
+      expect( scheduler.impl.work_threads.size ).to eql 1
       sleep(0.05) while counter.get == 1
-      expect( scheduler.work_threads.size ).to eql 2
+      expect( scheduler.impl.work_threads.size ).to eql 2
       sleep(0.05) while counter.get == 2
-      expect( scheduler.work_threads.size ).to eql 3
+      expect( scheduler.impl.work_threads.size ).to eql 3
 
       sleep 1.25
-      expect( scheduler.work_threads.size ).to eql 3
+      expect( scheduler.impl.work_threads.size ).to eql 3
       sleep 1.25
-      expect( scheduler.work_threads.size ).to eql 3
+      expect( scheduler.impl.work_threads.size ).to eql 3
     end
 
   end
