@@ -41,10 +41,15 @@ module LogStash
       # def scheduler(); @_scheduler ||= new_scheduler({}) end
       lazy_init_attr(:scheduler, variable: :@_scheduler) { start_scheduler({}) }
 
+      # Release jobs registered by the plugin from executing.
+      # This method executes from the plugin's #close method.
       def release_scheduler
         @_scheduler.shutdown if @_scheduler
       end
 
+      # Release jobs registered by the plugin from executing.
+      # This method executes from the plugin's #stop method.
+      # @note Blocks until the scheduler operation completes!
       def release_scheduler!
         @_scheduler.shutdown! if @_scheduler
       end
