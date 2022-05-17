@@ -28,15 +28,15 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
     end
 
     # @overload
-    def cron(schedule, &task); __schedule(:cron, schedule, &task); end
+    def cron(schedule, opts = {}, &task); __schedule(:cron, schedule, opts, &task); end
     # @overload
-    def every(period, &task); __schedule(:every, period, &task); end
+    def every(period, opts = {}, &task); __schedule(:every, period, opts, &task); end
     # @overload
-    def at(timestamp, &task); __schedule(:at, timestamp, &task); end
+    def at(timestamp, opts = {}, &task); __schedule(:at, timestamp, opts, &task); end
     # @overload
-    def in(delay, &task); __schedule(:in, delay, &task); end
+    def in(delay, opts = {}, &task); __schedule(:in, delay, opts, &task); end
     # @overload
-    def interval(interval, &task); __schedule(:interval, interval, &task); end
+    def interval(interval, opts = {}, &task); __schedule(:interval, interval, opts, &task); end
 
     # @overload
     def shutdown; @impl.shutdown end
@@ -54,11 +54,11 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
 
     private
 
-    def __schedule(type, arg, &task)
+    def __schedule(type, arg, opts, &task)
       unless block_given?
         raise ArgumentError, 'missing task - worker task to execute'
       end
-      JobAdapter.new @impl.send(:"schedule_#{type}", arg, &task)
+      JobAdapter.new @impl.send(:"schedule_#{type}", arg, opts, &task)
     end
 
   end

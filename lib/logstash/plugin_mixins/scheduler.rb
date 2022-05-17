@@ -78,19 +78,19 @@ module LogStash
 
         # @return a job object which responds to a #job_id method
         # @abstract
-        def cron(schedule, &task); fail NotImplementedError end
+        def cron(schedule, opts = {}, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
-        def every(period, &task); fail NotImplementedError end
+        def every(period, opts = {}, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
-        def at(timestamp, &task); fail NotImplementedError end
+        def at(timestamp, opts = {}, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
-        def in(delay, &task); fail NotImplementedError end
+        def in(delay, opts = {}, &task); fail NotImplementedError end
         # @return a job object which responds to a #job_id method
         # @abstract
-        def interval(interval, &task); fail NotImplementedError; end
+        def interval(interval, opts = {}, &task); fail NotImplementedError; end
 
         # Remove a previously scheduled job, this is optional
         # and only relevant for a shared scheduler.
