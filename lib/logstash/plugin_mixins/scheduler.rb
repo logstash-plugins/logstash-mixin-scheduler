@@ -45,17 +45,19 @@ module LogStash
       # def scheduler(); @_scheduler ||= new_scheduler({}) end
       lazy_init_attr(:scheduler, variable: :@_scheduler) { start_scheduler({}) }
 
+      private
+
       # Release jobs registered by the plugin from executing.
       # This method executes from the plugin's #close method.
       def release_scheduler
-        @_scheduler.shutdown if @_scheduler
+        @_scheduler.release if @_scheduler
       end
 
       # Release jobs registered by the plugin from executing.
       # This method executes from the plugin's #stop method.
-      # @note Blocks until the scheduler operation completes!
+      # @note Might block until the scheduler operation completes!
       def release_scheduler!
-        @_scheduler.shutdown! if @_scheduler
+        @_scheduler.release! if @_scheduler
       end
 
       # @param opts [Hash] scheduler options
@@ -72,7 +74,6 @@ module LogStash
         end
         RufusImpl::SchedulerAdapter.new name, { logger: logger }.merge(opts)
       end
-      private :start_scheduler
 
       # Scheduler interface usable by plugins.
       module SchedulerInterface
@@ -119,24 +120,27 @@ module LogStash
         # Resume executing jobs.
         # def resume; end
 
-        # Shutdown the scheduler:
+        # Release the scheduler:
         #  - prevents additional jobs from being registered,
         #  - and unschedules all future invocations of jobs previously registered
         #
-        # This operation does not block until the scheduler stops.
+        # This operation does not block until the scheduler stops executing jobs.
         # @abstract
-        def shutdown; fail NotImplementedError end
+        def release; fail NotImplementedError end
 
-        # Shutdown the scheduler:
+        # Release the scheduler:
         #  - prevents additional jobs from being registered,
         #  - and unschedules all future invocations of jobs previously registered
         #
-        # This operation does WAIT until the scheduler stops.
+        # This operation attempts to WAIT until the scheduler operation completes (if supported).
         # @abstract
-        def shutdown!; fail NotImplementedError end
+        def release!; release end
 
+        # Is this scheduler potentially executing our jobs.
+        #
         # @abstract
-        def shutdown?; fail NotImplementedError end
+        # @see #release
+        def running?; fail NotImplementedError end
 
       end
 

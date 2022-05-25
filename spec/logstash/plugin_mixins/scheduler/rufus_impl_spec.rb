@@ -25,21 +25,21 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     join_thread = Thread.start { scheduler.join }
     sleep 1.1
     expect(join_thread).to be_alive
-    expect(scheduler.shutdown?).to be false
-    scheduler.shutdown
+    expect(scheduler.impl.down?).to be false
+    scheduler.release
     Thread.pass
-    expect(scheduler.shutdown?).to be true
+    expect(scheduler.impl.down?).to be true
     expect(join_thread).to_not be_alive
   end
 
   it "gets interrupted from join (wait shutdown)" do
     scheduler.cron('* * * * * *') { 42**1000 }
-    expect(scheduler.shutdown?).to be false
+    expect(scheduler.impl.down?).to be false
     join_thread = Thread.start { scheduler.join }
     sleep 1.1
     expect(join_thread).to be_alive
-    scheduler.shutdown!
-    expect(scheduler.shutdown?).to be true
+    scheduler.release!
+    expect(scheduler.impl.down?).to be true
     expect(join_thread).to_not be_alive
   end
 

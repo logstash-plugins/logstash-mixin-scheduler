@@ -50,15 +50,15 @@ describe LogStash::PluginMixins::Scheduler do
 
           it 'shuts-down the scheduler on close' do
             scheduler = plugin.scheduler
-            expect( scheduler.shutdown? ).to be false
+            expect( scheduler.running? ).to be true
             plugin.do_close
-            expect( scheduler.shutdown? ).to be true
+            expect( scheduler.running? ).to be false
           end
 
           it 'shuts-down the scheduler on stop' do
             scheduler = plugin.scheduler
             plugin.stop
-            expect( scheduler.shutdown? ).to be true
+            expect( scheduler.running? ).to be false
           end
 
         end
