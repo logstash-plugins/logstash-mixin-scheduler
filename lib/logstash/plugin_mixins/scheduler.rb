@@ -19,24 +19,28 @@ module LogStash
       # @return [void]
       def self.included(base)
         fail(ArgumentError, "`#{base}` must inherit LogStash::Plugin") unless base < LogStash::Plugin
-        base.send(:prepend, PluginHooks)
+        instance_methods = base.instance_methods
+        base.send(:prepend, StopHook) if instance_methods.include?(:stop)
+        base.send(:prepend, CloseHook) if instance_methods.include?(:close)
       end
 
       # @private
-      module PluginHooks
-
-        def close
-          super # plugin.close
-          release_scheduler
-        end
-
+      module StopHook
         def stop
           release_scheduler! # wait till scheduler halts
           super # plugin.stop
         end
-
       end
-      private_constant :PluginHooks
+      private_constant :StopHook
+
+      # @private
+      module CloseHook
+        def close
+          super # plugin.close
+          release_scheduler
+        end
+      end
+      private_constant :CloseHook
 
       # def scheduler(); @_scheduler ||= new_scheduler({}) end
       lazy_init_attr(:scheduler, variable: :@_scheduler) { start_scheduler({}) }
