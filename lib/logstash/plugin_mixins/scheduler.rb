@@ -70,8 +70,7 @@ module LogStash
           name = "[#{pipeline_id}]|#{self.class.plugin_type}|#{plugin_name}|scheduler"
           # thread naming convention: [psql1]|input|jdbc|scheduler
         end
-        # TODO: should we use plugin's logger in the scheduler?
-        RufusImpl::SchedulerAdapter.new(name, opts)
+        RufusImpl::SchedulerAdapter.new name, { logger: logger }.merge(opts)
       end
       private :start_scheduler
 
