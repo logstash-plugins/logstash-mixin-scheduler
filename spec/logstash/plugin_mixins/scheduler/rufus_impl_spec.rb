@@ -29,7 +29,8 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     scheduler.release
     Thread.pass
     expect(scheduler.impl.down?).to be true
-    expect(join_thread).to_not be_alive
+    sleep 0.1
+    try(10) { expect(join_thread).to_not be_alive }
   end
 
   it "gets interrupted from join (wait shutdown)" do
@@ -40,7 +41,8 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     expect(join_thread).to be_alive
     scheduler.release!
     expect(scheduler.impl.down?).to be true
-    expect(join_thread).to_not be_alive
+    sleep 0.1
+    try(10) { expect(join_thread).to_not be_alive }
   end
 
   context 'cron schedule' do
