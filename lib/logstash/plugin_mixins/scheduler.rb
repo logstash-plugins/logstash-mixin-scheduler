@@ -96,10 +96,6 @@ module LogStash
         # @abstract
         def interval(interval, opts = {}, &task); fail NotImplementedError; end
 
-        # Remove a previously scheduled job, this is optional
-        # and only relevant for a shared scheduler.
-        # def delete_job(job); fail NotImplementedError; end
-
         # Blocks until _all_ jobs are joined, including jobs
         # that are scheduled after this join has begun blocking.
         # @abstract
