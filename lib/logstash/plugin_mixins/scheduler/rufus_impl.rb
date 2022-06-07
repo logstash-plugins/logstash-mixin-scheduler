@@ -48,10 +48,6 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
     # @overload
     def join; @impl.join end
 
-    # def paused?; @impl.paused? end
-    # def pause; @impl.pause end
-    # def resume; @impl.resume(discard_past: true) end
-
     private
 
     def __schedule(type, arg, opts, &task)

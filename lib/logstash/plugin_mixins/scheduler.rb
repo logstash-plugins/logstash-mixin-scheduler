@@ -105,21 +105,6 @@ module LogStash
         # @abstract
         def join; fail NotImplementedError end
 
-        # Is this scheduler paused?
-        # Pausing is assumed to be optional feature.
-        #
-        # @return [true] if paused
-        # @return [false] not paused - scheduler operating normally
-        # @return [nil] if pausing is not supported
-        # def paused?; nil end
-
-        # Pause executing scheduled jobs.
-        # @see #paused?
-        # def pause; fail NotImplementedError end
-
-        # Resume executing jobs.
-        # def resume; end
-
         # Release the scheduler:
         #  - prevents additional jobs from being registered,
         #  - and unschedules all future invocations of jobs previously registered
