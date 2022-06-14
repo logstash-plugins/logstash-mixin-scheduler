@@ -7,7 +7,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
   let(:name) { '[test]<jdbc_scheduler' }
 
   let(:opts) do
-    { :max_work_threads => 2 }
+    { max_work_threads: 2, frequency: 0.2 }
   end
 
   subject(:scheduler) do
@@ -83,7 +83,10 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     let(:counter) { java.util.concurrent.atomic.AtomicLong.new(0) }
 
     before do
-      scheduler.cron('* * * * * *') { counter.increment_and_get; sleep 3.25 } # every second
+      scheduler.cron('* * * * * *') do # every second
+        counter.increment_and_get
+        sleep_at_least 3.25
+      end
     end
 
     it "are working" do
@@ -100,6 +103,19 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
       expect( scheduler.impl.work_threads.size ).to eql 3
     end
 
+  end
+
+  private
+
+  # with multiple threads on JRuby 9.3 -> some tend to finish 'early'
+  def sleep_at_least(time)
+    start = Time.now
+    slept = 0
+    while slept < time
+      sleep(time - slept)
+      slept = Time.now - start
+    end
+    slept
   end
 
 end
