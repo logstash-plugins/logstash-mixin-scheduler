@@ -1,5 +1,11 @@
 require 'rufus/scheduler'
-
+begin
+  require 'et-orbi.rb' # a dependency of rufus-scheduler since 3.4
+  ::EtOrbi::EoTime.now # might take a long time to initialize - loading time zone
+  # data (from tz-info) and thus gets un-predictable on CI, since the scheduler worker
+  # thread might be stuck starting while we attempt to shutdown in a given time frame
+rescue LoadError
+end
 require 'logstash/util/loggable'
 
 module LogStash module PluginMixins module Scheduler module RufusImpl
