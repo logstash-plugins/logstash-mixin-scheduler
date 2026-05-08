@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-mixin-scheduler'
-  s.version       = '1.0.1'
+  s.version       = ::File.read('version').split("\n").first
   s.licenses      = %w(Apache-2.0)
   s.summary       = "Scheduler for Logstash plugins"
   s.authors       = %w(Elastic)
