@@ -1,6 +1,6 @@
 # Scheduler Mixin
 
-[![Build Status](https://travis-ci.com/logstash-plugins/logstash-mixin-scheduler.svg?branch=main)](https://travis-ci.com/logstash-plugins/logstash-mixin-scheduler)
+[![Unit Tests](https://github.com/logstash-plugins/logstash-mixin-scheduler/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/logstash-plugins/logstash-mixin-scheduler/actions/workflows/unit-tests.yml)
 
 
 ## Usage
