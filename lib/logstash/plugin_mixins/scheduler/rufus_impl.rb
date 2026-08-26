@@ -49,6 +49,8 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
     # @overload
     def release!; @impl.shutdown(:wait) end
     # @overload
+    def terminate!; @impl.shutdown(:kill) end
+    # @overload
     def running?; !@impl.down? end
 
     # @overload

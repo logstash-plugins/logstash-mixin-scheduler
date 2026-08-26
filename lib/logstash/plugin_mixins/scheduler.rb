@@ -37,7 +37,7 @@ module LogStash
       module CloseHook
         def close
           super # plugin.close
-          release_scheduler
+          terminate_scheduler!
         end
       end
       private_constant :CloseHook
@@ -47,10 +47,10 @@ module LogStash
 
       private
 
-      # Release jobs registered by the plugin from executing.
+      # Terminate the scheduler, including any jobs currently executing.
       # This method executes from the plugin's #close method.
-      def release_scheduler
-        @_scheduler.release if @_scheduler
+      def terminate_scheduler!
+        @_scheduler.terminate! if @_scheduler
       end
 
       # Release jobs registered by the plugin from executing.
@@ -116,6 +116,14 @@ module LogStash
         # This operation attempts to WAIT until the scheduler operation completes (if supported).
         # @abstract
         def release!; release end
+
+        # Fully and immediately terminate the scheduler:
+        #  - prevents additional jobs from being registered,
+        #  - unschedules all future invocations of jobs previously registered,
+        #  - and stops any jobs currently executing.
+        #
+        # @abstract
+        def terminate!; release! end
 
         # Is this scheduler potentially executing our jobs.
         #

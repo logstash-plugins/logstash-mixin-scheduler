@@ -55,6 +55,17 @@ describe LogStash::PluginMixins::Scheduler do
             expect( scheduler.running? ).to be false
           end
 
+          it 'terminates scheduler work threads on close' do
+            scheduler = plugin.scheduler
+            ran = java.util.concurrent.CountDownLatch.new(1)
+            scheduler.every('1s') { ran.count_down }
+            expect( ran.await(10, java.util.concurrent.TimeUnit::SECONDS) ).to be true
+            work_threads = scheduler.impl.work_threads
+            expect( work_threads.count(&:alive?) ).to be >= 1
+            plugin.do_close
+            try(10) { expect( work_threads.count(&:alive?) ).to eql 0 }
+          end
+
           it 'shuts-down the scheduler on stop' do
             scheduler = plugin.scheduler
             plugin.stop
