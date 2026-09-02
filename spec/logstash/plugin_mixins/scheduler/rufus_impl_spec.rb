@@ -45,6 +45,47 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     try(10) { expect(join_thread).to_not be_alive }
   end
 
+  it "terminates idle work threads on terminate!" do
+    scheduler.every('0.2s') { }
+    sleep 0.5
+    scheduler.impl.jobs.each(&:unschedule)
+    sleep 0.5
+    work_threads = scheduler.impl.work_threads
+    expect( work_threads.count(&:alive?) ).to be >= 1
+    scheduler.terminate!
+    try(10) { expect( work_threads.count(&:alive?) ).to eql 0 }
+  end
+
+  context 'with a job in flight' do
+
+    let(:started)   { java.util.concurrent.CountDownLatch.new(1) }
+    let(:completed) { java.util.concurrent.atomic.AtomicBoolean.new(false) }
+
+    before do
+      scheduler.in('0.1s') do
+        started.count_down
+        sleep 2
+        completed.set(true)
+      end
+      expect( started.await(5, java.util.concurrent.TimeUnit::SECONDS) ).to be true
+    end
+
+    it "release! (from #stop) blocks until the running job finishes" do
+      work_threads = scheduler.impl.work_threads
+      scheduler.release!
+      expect( completed.get ).to be true
+      expect( work_threads.count(&:alive?) ).to eql 0
+    end
+
+    it "terminate! (from #close) stops the running job" do
+      work_threads = scheduler.impl.work_threads
+      scheduler.terminate!
+      expect( completed.get ).to be false
+      try(10) { expect( work_threads.count(&:alive?) ).to eql 0 }
+    end
+
+  end
+
   context 'cron schedule' do
 
     before do
