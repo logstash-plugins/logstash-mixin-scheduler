@@ -1,3 +1,6 @@
+## 1.0.2
+  - Fix: terminate idle scheduler work threads on plugin close, which leaked one thread per pipeline reload [#7](https://github.com/logstash-plugins/logstash-mixin-scheduler/pull/7)
+
 ## 1.0.1
   - Refactor: initialize time zone data eagerly [#2](https://github.com/logstash-plugins/logstash-mixin-scheduler/pull/2)
 
