@@ -17,23 +17,31 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
   after { scheduler.impl.shutdown }
 
   it "sets scheduler thread name" do
+    puts "DNADBG>> sets scheduler thread name"
     expect( scheduler.impl.thread.name ).to include name
   end
 
   it "gets interrupted from join" do
+    puts "DNADBG>> gets interrupted from join"
     scheduler.every('1s') { 42**1000 }
     join_thread = Thread.start { scheduler.join }
     sleep 1.1
+    puts "DNADBG>> after sleep 1.1"
     expect(join_thread).to be_alive
     expect(scheduler.impl.down?).to be false
+    puts "DNADBG>> before release"
     scheduler.release
+    puts "DNADBG>> after release"
     Thread.pass
     expect(scheduler.impl.down?).to be true
     sleep 0.1
+    puts "DNADBG>> before check to be alive"
     try(10) { expect(join_thread).to_not be_alive }
+    puts "DNADBG>> after check to be alive"
   end
 
   it "gets interrupted from join (wait shutdown)" do
+    puts "DNADBG>> gets interrupted from join (wait shutdown)"
     scheduler.cron('* * * * * *') { 42**1000 }
     expect(scheduler.impl.down?).to be false
     join_thread = Thread.start { scheduler.join }
@@ -46,6 +54,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
   end
 
   it "terminates idle work threads on terminate!" do
+    puts "DNADBG>> gets interrupted from join (wait shutdown)"
     scheduler.every('0.2s') { }
     sleep 0.5
     scheduler.impl.jobs.each(&:unschedule)
@@ -71,6 +80,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     end
 
     it "release! (from #stop) blocks until the running job finishes" do
+      puts "DNADBG>> release! (from #stop) blocks until the running job finishes"
       work_threads = scheduler.impl.work_threads
       scheduler.release!
       expect( completed.get ).to be true
@@ -78,6 +88,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     end
 
     it "terminate! (from #close) stops the running job" do
+      puts "DNADBG>> terminate! (from #close) stops the running job"
       work_threads = scheduler.impl.work_threads
       scheduler.terminate!
       expect( completed.get ).to be false
@@ -93,6 +104,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     end
 
     it "sets worker thread names" do
+      puts "DNADBG>> sets worker thread names"
       sleep 3.0
       threads = scheduler.impl.work_threads
       threads.sort! { |t1, t2| (t1.name || '') <=> (t2.name || '') }
@@ -111,6 +123,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     end
 
     it "logs errors handled" do
+      puts "DNADBG>> logs errors handled"
       expect( scheduler.impl.send(:logger) ).to receive(:error).with /Scheduler intercepted an error/, hash_including(:message => 'TEST')
       sleep 2.25
     end
@@ -131,6 +144,7 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     end
 
     it "are working" do
+      puts "DNADBG>> are working"
       sleep(0.05) while counter.get == 0
       expect( scheduler.impl.work_threads.size ).to eql 1
       sleep(0.05) while counter.get == 1
