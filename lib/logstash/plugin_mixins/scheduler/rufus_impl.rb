@@ -202,6 +202,8 @@ module LogStash module PluginMixins module Scheduler module RufusImpl
 
         work_threads = @scheduler.work_threads(:__all_no_cache__)
         while prev_thread_count == work_threads.size # very unlikely
+          # work thread exits right away if the scheduler is being shut down
+          break if @scheduler.down? || (ret.is_a?(Thread) && !ret.alive?)
           Thread.pass
           work_threads = @scheduler.work_threads(:__all_no_cache__)
         end

@@ -56,6 +56,23 @@ describe LogStash::PluginMixins::Scheduler::RufusImpl do
     try(10) { expect( work_threads.count(&:alive?) ).to eql 0 }
   end
 
+  it "does not hang when a new work thread exits right away (shutdown race)" do
+    # a work thread exits immediately when it sees the scheduler being shut down
+    allow(scheduler.impl).to receive(:started_at).and_return(nil)
+    allow(scheduler.impl).to receive(:work_threads).and_wrap_original do |m, *args|
+      sleep 0.1 if args.first == :__all_no_cache__ # let the work thread exit before we look for it
+      m.call(*args)
+    end
+    scheduler.in('0.1s') { }
+    sleep 0.5
+    release_thread = Thread.start { scheduler.release }
+    begin
+      expect( release_thread.join(5) ).to_not be nil
+    ensure
+      scheduler.impl.thread.kill # do not hang the after hook
+    end
+  end
+
   context 'with a job in flight' do
 
     let(:started)   { java.util.concurrent.CountDownLatch.new(1) }
